@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      :root {
+        --primary-color: #4a90e2;
+        --secondary-color: #f5f5f5;
+        --font-family: Arial, sans-serif;
+        --font-family-mono: 'Courier New', monospace;
+        --border-radius: 4px;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        width: 400px;
+        padding-top: 0px;
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-bottom: 10px;
+        margin: 0 0 0 0;
+        font-family: var(--font-family);
+        background-color: var(--secondary-color);
+      }
+
+      .top-links {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+
+      img {
+        width: 128px;
+        height: 128px;
+        margin-right: 1rem;
+      }
+
+      h1 {
+        text-align: left;
+        margin: 0;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+      }
+
+      #apiKey {
+        font-family: var(--font-family-mono);
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: var(--border-radius);
+        border: 1px solid #ccc;
+      }
+
+      #prompt-template {
+        width: 100%;
+        font-family: var(--font-family-mono);
+        font-size: 12px;
+        padding: 0.5rem;
+        border-radius: var(--border-radius);
+        border: 1px solid #ccc;
+      }
+
+      #temperature {
+        display: inline-block;
+        width: calc(100% - 50px);
+      }
+
+      #temperature-value {
+        display: inline-block;
+        width: 30px;
+      }
+
+      button {
+        background-color: var(--primary-color);
+        color: white;
+        font-size: 1rem;
+        font-weight: bold;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        margin-top: 1rem;
+      }
+
+      button:hover {
+        background-color: #2a6ab9;
+      }
+
+      a, .reset-link {
+        color: var(--primary-color);
+        text-decoration: none;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        display: inline-block;
+      }
+
+      a:hover, .reset-link:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top-links">
+      <a href="https://github.com/franzenzenhofer/rewriteai" target="_blank">GitHub Repository</a>
+      <a href="https://www.fullstackoptimization.com/" target="_blank">Full Stack Optimization</a>
+    </div>
+    <div class="header">
+      <img src="icon128.png" alt="Logo" />
+      <h1>Franz AI Rewriter Options</h1>
+    </div>
+    <label>
+      API Key:
+      <input type="password" id="apiKey" /><br>
+      If you don't have an API key, please sign up at
+      <a href="https://platform.openai.com/account/api-keys" target="_blank">OpenAI API key page</a>.
+    </label>
+    <label for="model">Model:
+    <select id="model">
+      <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+      <option value="gpt-4">gpt-4</option>
+    </select>
+  </label>
+    <label>
+      Prompt Template:
+      <textarea id="prompt-template" rows="7"></textarea>
+    </label>
+    <label>
+      Temperature:
+      <input type="range" id="temperature" min="0" max="1" step="0.01" />
+      <span id="temperature-value"></span>
+    </label>
+    <button id="save">Save</button>
+    <a class="reset-link" id="reset">Reset to default</a>
+    <script src="options.js"></script>
+  </body>
+</html>

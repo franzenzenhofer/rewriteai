@@ -3,10 +3,19 @@
   "name": "Franz AI Rewriter",
   "version": "1.0",
   "description": "Rewrite selected text using OpenAI API",
-  "permissions": ["activeTab", "contextMenus"],
+  "permissions": ["activeTab", "contextMenus", "storage", "https://api.openai.com/"],
   "background": {
-    "scripts": ["config.js", "background.js"],
+    "scripts": ["background.js"],
     "persistent": false
+  },
+  "options_page": "options.html",
+  "browser_action": {
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    },
+    "default_popup": "options.html"
   },
   "icons": {
     "16": "icon16.png",

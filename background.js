@@ -1,5 +1,10 @@
 chrome.runtime.onInstalled.addListener(function () {
   console.log('Extension installed');
+  chrome.storage.sync.get(['apiKey'], function (result) {
+    if (!result.apiKey) {
+      chrome.runtime.openOptionsPage();
+    }
+  });
   chrome.contextMenus.create({
     id: 'rewriteText',
     title: 'Rewrite Text with Franz AI',
@@ -63,7 +68,14 @@ async function rewriteText(text, parentNode, tabId, uniqueId) {
 
 async function fetchRewrittenText(text) {
   console.log('rewriteText function called with text:', text);
-  const apiKey = API_KEY;
+
+  const apiKey = await getOption('apiKey');
+  const model = (await getOption('model')) || 'gpt-3.5-turbo'; // Use gpt-3.5-turbo as default if model is not available
+  const promptTemplate = await getOption('promptTemplate'); // Change this line
+  const temperature = await getOption('temperature');
+
+  const finalPrompt = `${promptTemplate} "${text}"`; // Added this line
+  console.log('Final prompt submitted to OpenAI:', finalPrompt); 
 
   try {
     console.log('Sending API request');
@@ -74,12 +86,12 @@ async function fetchRewrittenText(text) {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: model,
         messages: [{
           role: 'user',
-          content: `Rewrite the following text, making it better as if a professional website editor did it. Preserve any HTML structure if present. If there are links in there, keep the links. You can add bullet points if it fits the topic. Respond in the same language as the original text, and return approximately the same amount of text received. If you got a short headline or sentence, don't turn it into a paragraph: "${text}"`
+          content: finalPrompt,
         }],
-        temperature: 0.7,
+        temperature: parseFloat(temperature),
       }),
     });
 
@@ -95,6 +107,15 @@ async function fetchRewrittenText(text) {
     return null;
   }
 }
+
+async function getOption(key) {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get([key], function (result) {
+      resolve(result[key]);
+    });
+  });
+}
+
 
 function replaceSelectedText(tabId, originalText, rewrittenText, parentNode, uniqueId) {
   chrome.tabs.executeScript(tabId, {
