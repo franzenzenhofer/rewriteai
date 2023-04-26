@@ -140,6 +140,51 @@ async function getOption(key) {
 }
 
 
+function displayOverlayMessage(tabId, message) {
+  chrome.tabs.executeScript(tabId, {
+    code: `
+      (function() {
+        const message = ${JSON.stringify(message)};
+        
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.zIndex = '2147483647';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        overlay.style.display = 'flex';
+        overlay.style.flexDirection = 'column';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        
+        const content = document.createElement('div');
+        content.style.backgroundColor = 'white';
+        content.style.color = 'black'; // Set font color to black
+        content.style.border = '1px solid black';
+        content.style.borderRadius = '4px';
+        content.style.padding = '20px';
+        content.style.textAlign = 'center';
+        content.innerHTML = '<h3>In content replacement did not work, this is what we would have changed:</h3><p>' + message + '</p>';
+        
+        const closeButton = document.createElement('button');
+        closeButton.textContent = 'Close';
+        closeButton.style.marginTop = '20px';
+        closeButton.onclick = () => {
+          document.body.removeChild(overlay);
+        };
+        
+        content.appendChild(closeButton);
+        overlay.appendChild(content);
+        document.body.appendChild(overlay);
+      })();
+    `,
+  });
+}
+
+
+
 function replaceSelectedText(tabId, originalText, rewrittenText, parentNode, uniqueId) {
   chrome.tabs.executeScript(tabId, {
     code: `
@@ -150,6 +195,7 @@ function replaceSelectedText(tabId, originalText, rewrittenText, parentNode, uni
         const uniqueId = ${JSON.stringify(uniqueId)};
         
         console.log('Executing script to replace text');
+        let success = false;
         try {
           const parser = new DOMParser();
           const parsedParentNode = parser.parseFromString(parentNode, 'text/html').body.firstChild;
@@ -166,7 +212,12 @@ function replaceSelectedText(tabId, originalText, rewrittenText, parentNode, uni
           
           if (targetParentNode) {
             targetParentNode.outerHTML = parsedParentNode.outerHTML;
-            console.log('Text replacement complete');
+            const liveDomElement = document.querySelector('.' + uniqueId);
+            success = liveDomElement && liveDomElement.outerHTML.includes(rewrittenText);
+            
+            if (success) {
+              liveDomElement.classList.add('franz-ai-updated');
+            }
           } else {
             console.error('Unable to find the target parent node');
           }
@@ -181,9 +232,17 @@ function replaceSelectedText(tabId, originalText, rewrittenText, parentNode, uni
         } catch (error) {
           console.error('Error in text replacement:', error);
         }
+        return { success };
       })();
     `,
   }, (result) => {
-    console.log('Script injection result:', result);
+    if (result && result[0] && result[0].success) {
+      console.log('Text replacement complete');
+    } else {
+      console.error('Text replacement failed');
+      const escapedText = originalText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      displayOverlayMessage(tabId, escapedText);
+    }
   });
 }
+
