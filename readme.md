@@ -7,6 +7,10 @@ This Chrome extension allows users to rewrite selected text on every webpage usi
 
 **Please note that you need an OpenAI API key for this extension to work.**
 
+
+**DISCLAIMER**: This project was created using ChatGPT V4, an AI language model by OpenAI. The code was generated with minimal human intervention - not a single line of code was written by a human, but several prompts and copy-pasting were done by the project director, Franz Enzenhofer. While the AI contributed significantly to the development, users are advised to use the extension at their own risk.
+
+
 INSTALL INSTRUCTIONS:
 ---------------------
 
