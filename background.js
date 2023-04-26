@@ -99,18 +99,27 @@ async function fetchRewrittenText(text) {
 function replaceSelectedText(tabId, originalText, rewrittenText, parentNode, uniqueId) {
   chrome.tabs.executeScript(tabId, {
     code: `
-      const originalText = ${JSON.stringify(originalText)};
-      const rewrittenText = ${JSON.stringify(rewrittenText)};
-      const parentNode = ${JSON.stringify(parentNode)};
-      const uniqueId = ${JSON.stringify(uniqueId)};
       (function() {
+        const originalText = ${JSON.stringify(originalText)};
+        const rewrittenText = ${JSON.stringify(rewrittenText)};
+        const parentNode = ${JSON.stringify(parentNode)};
+        const uniqueId = ${JSON.stringify(uniqueId)};
+        
         console.log('Executing script to replace text');
         try {
           const parser = new DOMParser();
           const parsedParentNode = parser.parseFromString(parentNode, 'text/html').body.firstChild;
-          const newParentInnerHTML = parsedParentNode.innerHTML.replace(originalText, rewrittenText);
+          let newParentInnerHTML = parsedParentNode.innerHTML.replace(originalText, rewrittenText);
+          
+          if (parsedParentNode.innerHTML === newParentInnerHTML) {
+            // Perform a more flexible search and replace if the original text was not found
+            const regex = new RegExp(originalText.replace(/[.*+\-?^$\{\}()|[\]\\]/g, '\\$&'), 'g');
+            newParentInnerHTML = parsedParentNode.innerHTML.replace(regex, rewrittenText);
+          }
+          
           parsedParentNode.innerHTML = newParentInnerHTML;
           const targetParentNode = document.querySelector('.' + uniqueId);
+          
           if (targetParentNode) {
             targetParentNode.outerHTML = parsedParentNode.outerHTML;
             console.log('Text replacement complete');
