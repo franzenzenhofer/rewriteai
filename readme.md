@@ -25,6 +25,8 @@ INSTALL INSTRUCTIONS:
 SETUP AND USAGE:
 ----------------
 
+![Mouse Menu Franz AI](preview.png)
+
 1.  Click on the extension icon in the Chrome toolbar and open the Options page.
 2.  Enter your OpenAI API Key in the "API Key" field. If you don't have an API key, sign up at <https://platform.openai.com/account/api-keys>.
 3.  Choose the desired model from the "Model" dropdown (default is gpt-3.5-turbo).
@@ -33,7 +35,8 @@ SETUP AND USAGE:
 6.  Click "Save" to store your settings.
 7.  To use the extension, simply select the text you want to rewrite, right-click it, and choose "Rewrite Text with Franz AI" from the context menu. The selected text will be rewritten using the OpenAI API.
 
-![Mouse Menu Franz AI](preview.png)
+![Options Page](options.png)
+
 
 PRIVACY POLICY AND SECURITY:
 ----------------------------
