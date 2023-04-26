@@ -240,7 +240,7 @@ function replaceSelectedText(tabId, originalText, rewrittenText, parentNode, uni
       console.log('Text replacement complete');
     } else {
       console.error('Text replacement failed');
-      const escapedText = originalText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const escapedText = rewrittenText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       displayOverlayMessage(tabId, escapedText);
     }
   });
