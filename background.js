@@ -20,26 +20,35 @@ function getSelectedHTML(tabId) {
   chrome.tabs.executeScript(tabId, {
     code: `
       (function() {
+        function generateUniqueId() {
+          return 'franz-ai-' + Math.random().toString(36).substr(2, 9);
+        }
+
         const selection = window.getSelection();
         const range = selection.getRangeAt(0);
         const container = document.createElement('div');
         container.appendChild(range.cloneContents());
         const parentNode = range.commonAncestorContainer.parentNode;
-        const parentInnerHTML = parentNode.innerHTML;
-        return { selectedHTML: container.innerHTML, parentInnerHTML, parentNodeTagName: parentNode.tagName };
+        const uniqueId = generateUniqueId();
+        parentNode.classList.add(uniqueId);
+        return { selectedHTML: container.innerHTML, parentNodeOuterHTML: parentNode.outerHTML, uniqueId };
       })();
     `,
   }, (result) => {
     if (result && result[0]) {
       console.log('Selected HTML:', result[0].selectedHTML);
-      rewriteText(result[0].selectedHTML, result[0].parentInnerHTML, result[0].parentNodeTagName, tabId);
+      console.log('Parent node outerHTML:', result[0].parentNodeOuterHTML);
+      console.log('Unique identifier:', result[0].uniqueId);
+      rewriteText(result[0].selectedHTML, result[0].parentNodeOuterHTML, tabId, result[0].uniqueId);
     } else {
       console.log('No valid HTML selected');
     }
   });
 }
 
-async function rewriteText(text, parentInnerHTML, parentNodeTagName, tabId) {
+
+
+async function rewriteText(text, parentNode, tabId, uniqueId) {
   if (!text) {
     console.error('Invalid input text:', text);
     return;
@@ -47,9 +56,10 @@ async function rewriteText(text, parentInnerHTML, parentNodeTagName, tabId) {
 
   const rewrittenText = await fetchRewrittenText(text);
   if (rewrittenText) {
-    replaceSelectedText(tabId, text, rewrittenText, parentInnerHTML, parentNodeTagName);
+    replaceSelectedText(tabId, text, rewrittenText, parentNode, uniqueId);
   }
 }
+
 
 async function fetchRewrittenText(text) {
   console.log('rewriteText function called with text:', text);
@@ -67,7 +77,7 @@ async function fetchRewrittenText(text) {
         model: 'gpt-3.5-turbo',
         messages: [{
           role: 'user',
-          content: `Rewrite the following text, making it better as if a professional website editor did it. You must preserve any HTML structure if present. You can add bullet points if it fits the topic. Respond in the same language as the original text, and return approximately the same amount of text received. If you got a short sentence or just a word, never turn it into a paragraph, the shorter the text, the more keep to the original content length, just respond with the text or HTML that we need: "${text}"`
+          content: `Rewrite the following text, making it better as if a professional website editor did it. Preserve any HTML structure if present. If there are links in there, keep the links. You can add bullet points if it fits the topic. Respond in the same language as the original text, and return approximately the same amount of text received. If you got a short headline or sentence, don't turn it into a paragraph: "${text}"`
         }],
         temperature: 0.7,
       }),
@@ -86,24 +96,28 @@ async function fetchRewrittenText(text) {
   }
 }
 
-function replaceSelectedText(tabId, originalText, rewrittenText, parentInnerHTML, parentNodeTagName) {
+function replaceSelectedText(tabId, originalText, rewrittenText, parentNode, uniqueId) {
   chrome.tabs.executeScript(tabId, {
     code: `
       const originalText = ${JSON.stringify(originalText)};
       const rewrittenText = ${JSON.stringify(rewrittenText)};
-      const parentInnerHTML = ${JSON.stringify(parentInnerHTML)};
-      const parentNodeTagName = ${JSON.stringify(parentNodeTagName)};
+      const parentNode = ${JSON.stringify(parentNode)};
+      const uniqueId = ${JSON.stringify(uniqueId)};
       (function() {
         console.log('Executing script to replace text');
         try {
-          const selection = window.getSelection();
-          console.log('Current selection:', selection.toString());
-          const range = selection.getRangeAt(0);
-          const parentNode = range.commonAncestorContainer.parentNode;
-          const newParentInnerHTML = parentInnerHTML.replace(originalText, rewrittenText);
-          parentNode.innerHTML = newParentInnerHTML;
-          selection.removeAllRanges();
-          console.log('Text replacement complete');
+          const parser = new DOMParser();
+          const parsedParentNode = parser.parseFromString(parentNode, 'text/html').body.firstChild;
+          const newParentInnerHTML = parsedParentNode.innerHTML.replace(originalText, rewrittenText);
+          parsedParentNode.innerHTML = newParentInnerHTML;
+          const targetParentNode = document.querySelector('.' + uniqueId);
+          if (targetParentNode) {
+            targetParentNode.outerHTML = parsedParentNode.outerHTML;
+            console.log('Text replacement complete');
+            targetParentNode.classList.remove(uniqueId); // Remove the unique identifier after the replacement
+          } else {
+            console.error('Unable to find the target parent node');
+          }
         } catch (error) {
           console.error('Error in text replacement:', error);
         }
