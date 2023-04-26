@@ -25,7 +25,7 @@ chrome.contextMenus.onClicked.addListener(function (info, tab) {
 function injectPulsatingCSS(tabId) {
   chrome.tabs.insertCSS(tabId, {
     code: `
-      @keyframes pulsate {
+      @keyframes franzAiPulsateAnimation {
         0% {
           opacity: 1;
         }
@@ -37,7 +37,7 @@ function injectPulsatingCSS(tabId) {
         }
       }
       .franz-ai-pulsate {
-        animation: pulsate 1s ease infinite;
+        animation: franzAiPulsateAnimation 1s ease infinite;
       }
     `,
   });
@@ -82,14 +82,14 @@ async function rewriteText(text, parentNode, tabId, uniqueId) {
     return;
   }
 
-  const rewrittenText = await fetchRewrittenText(text);
+  const rewrittenText = await fetchRewrittenText(text, tabId);
   if (rewrittenText) {
     replaceSelectedText(tabId, text, rewrittenText, parentNode, uniqueId);
   }
 }
 
 
-async function fetchRewrittenText(text) {
+async function fetchRewrittenText(text, tabId) {
   console.log('rewriteText function called with text:', text);
 
   const apiKey = await getOption('apiKey');
@@ -119,6 +119,14 @@ async function fetchRewrittenText(text) {
     });
 
     console.log('API response:', response);
+
+    if (!response.ok) {
+      const errorMessage = handleApiError(response.status);
+      console.error(errorMessage);
+      displayOverlayMessage(tabId, errorMessage);
+      return null;
+    }
+
     const data = await response.json();
     console.log('API data:', data);
     const rewrittenText = data.choices[0].message.content.trim();
@@ -139,13 +147,36 @@ async function getOption(key) {
   });
 }
 
+function handleApiError(statusCode) {
+  switch (statusCode) {
+    case 400:
+      return 'Error: Bad request. Please check your input and try again.';
+    case 401:
+      return 'Authentication error: Please check your API key and organization.';
+    case 404:
+      return 'Error: The requested resource was not found.';
+    case 429:
+      return 'Error: Rate limit reached or quota exceeded. Please check your plan and billing details, or try again later.';
+    case 500:
+      return 'Error: Server error while processing your request. Please try again later.';
+    default:
+      return 'Error: An unknown error occurred. Please try again later.';
+  }
+}
+
+
 
 function displayOverlayMessage(tabId, message) {
   chrome.tabs.executeScript(tabId, {
     code: `
       (function() {
         const message = ${JSON.stringify(message)};
-        
+        function removeAllPulsateClass() {
+          const pulsatingElements = document.querySelectorAll('.franz-ai-pulsate');
+          pulsatingElements.forEach(element => {
+            element.classList.remove('franz-ai-pulsate');
+          });
+        }
         const overlay = document.createElement('div');
         overlay.style.position = 'fixed';
         overlay.style.zIndex = '2147483647';
@@ -178,6 +209,7 @@ function displayOverlayMessage(tabId, message) {
         content.appendChild(closeButton);
         overlay.appendChild(content);
         document.body.appendChild(overlay);
+        removeAllPulsateClass();
       })();
     `,
   });
