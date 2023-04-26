@@ -3,7 +3,9 @@
 Franz AI Rewriter Chrome Extension
 ==================================
 
-This Chrome extension allows users to rewrite selected text using OpenAI's API.
+This Chrome extension allows users to rewrite selected text on every webpage using OpenAI's API.
+
+**Please note that you need an OpenAI API key for this extension to work.**
 
 INSTALL INSTRUCTIONS:
 ---------------------
