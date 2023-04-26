@@ -246,3 +246,5 @@ function replaceSelectedText(tabId, originalText, rewrittenText, parentNode, uni
   });
 }
 
+
+
