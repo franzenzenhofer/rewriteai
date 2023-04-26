@@ -17,9 +17,31 @@ chrome.contextMenus.onClicked.addListener(function (info, tab) {
   console.log('Context menu item clicked');
   if (info.menuItemId === 'rewriteText' && info.selectionText) {
     console.log('Rewriting text:', info.selectionText);
+    injectPulsatingCSS();
     getSelectedHTML(tab.id);
   }
 });
+
+function injectPulsatingCSS(tabId) {
+  chrome.tabs.insertCSS(tabId, {
+    code: `
+      @keyframes pulsate {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+      .franz-ai-pulsate {
+        animation: pulsate 1s ease infinite;
+      }
+    `,
+  });
+}
 
 function getSelectedHTML(tabId) {
   chrome.tabs.executeScript(tabId, {
@@ -36,6 +58,7 @@ function getSelectedHTML(tabId) {
         const parentNode = range.commonAncestorContainer.parentNode;
         const uniqueId = generateUniqueId();
         parentNode.classList.add(uniqueId);
+        parentNode.classList.add('franz-ai-pulsate'); 
         return { selectedHTML: container.innerHTML, parentNodeOuterHTML: parentNode.outerHTML, uniqueId };
       })();
     `,
@@ -144,10 +167,17 @@ function replaceSelectedText(tabId, originalText, rewrittenText, parentNode, uni
           if (targetParentNode) {
             targetParentNode.outerHTML = parsedParentNode.outerHTML;
             console.log('Text replacement complete');
-            targetParentNode.classList.remove(uniqueId); // Remove the unique identifier after the replacement
           } else {
             console.error('Unable to find the target parent node');
           }
+          
+          // Remove the unique identifier and pulsating class from all elements in the DOM
+          const elements = document.querySelectorAll('.' + uniqueId);
+          elements.forEach(element => {
+            element.classList.remove(uniqueId);
+            element.classList.remove('franz-ai-pulsate');
+          });
+          
         } catch (error) {
           console.error('Error in text replacement:', error);
         }

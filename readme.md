@@ -1,3 +1,5 @@
+![Franz AI Rewriter Chrome Extension Logo](logo.png)
+
 Franz AI Rewriter Chrome Extension
 ==================================
 
