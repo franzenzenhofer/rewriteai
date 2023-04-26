@@ -29,6 +29,8 @@ SETUP AND USAGE:
 6.  Click "Save" to store your settings.
 7.  To use the extension, simply select the text you want to rewrite, right-click it, and choose "Rewrite Text with Franz AI" from the context menu. The selected text will be rewritten using the OpenAI API.
 
+![Mouse Menu Franz AI](preview.png)
+
 PRIVACY POLICY AND SECURITY:
 ----------------------------
 
