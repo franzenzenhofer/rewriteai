@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Franz AI Rewriter",
   "version": "1.0",
-  "description": "Rewrite selected text using OpenAI API",
+  "description": "Rewrite selected text using the OpenAI API",
   "permissions": ["activeTab", "contextMenus", "storage", "https://api.openai.com/"],
   "background": {
     "scripts": ["background.js"],
