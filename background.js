@@ -102,6 +102,7 @@ async function fetchRewrittenText(text, tabId) {
 
   try {
     console.log('Sending API request');
+    const { timerId, timerInterval } = await createTimer(tabId);
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -119,6 +120,7 @@ async function fetchRewrittenText(text, tabId) {
     });
 
     console.log('API response:', response);
+    removeTimer(tabId, timerId, timerInterval);
 
     if (!response.ok) {
       const errorMessage = handleApiError(response.status);
@@ -135,6 +137,7 @@ async function fetchRewrittenText(text, tabId) {
     return rewrittenText;
   } catch (error) {
     console.error('Error:', error);
+    removeTimer(tabId, timerId, timerInterval);
     return null;
   }
 }
@@ -180,15 +183,14 @@ function displayOverlayMessage(tabId, message) {
         const overlay = document.createElement('div');
         overlay.style.position = 'fixed';
         overlay.style.zIndex = '2147483647';
-        overlay.style.top = '0';
-        overlay.style.left = '0';
-        overlay.style.width = '100%';
-        overlay.style.height = '100%';
-        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        overlay.style.bottom = '10px'; // Changed from top to bottom
+        overlay.style.left = '10px';
+        overlay.style.right = '10px'; // Added right positioning
+        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
         overlay.style.display = 'flex';
         overlay.style.flexDirection = 'column';
         overlay.style.alignItems = 'center';
-        overlay.style.justifyContent = 'center';
+        overlay.style.justifyContent = 'flex-start'; // Changed from center to flex-start
         
         const content = document.createElement('div');
         content.style.backgroundColor = 'white';
@@ -197,6 +199,9 @@ function displayOverlayMessage(tabId, message) {
         content.style.borderRadius = '4px';
         content.style.padding = '20px';
         content.style.textAlign = 'center';
+        content.style.maxHeight = '80%'; // Added max height
+        content.style.overflowY = 'auto'; // Added overflow for scrolling
+        content.style.boxShadow = '0px 3px 6px rgba(0, 0, 0, 0.2)'; // Added box-shadow
         content.innerHTML = '<h3>In content replacement did not work, this is what we would have changed:</h3><p>' + message + '</p>';
         
         const closeButton = document.createElement('button');
@@ -216,6 +221,89 @@ function displayOverlayMessage(tabId, message) {
 }
 
 
+function createTimer(tabId) {
+  return new Promise(async (resolve) => {
+    const timerId = await createAndDisplayTimer(tabId);
+    const startTime = Date.now();
+    const timerInterval = setInterval(() => {
+      updateTimer(tabId, timerId, startTime, (timeLeft) => {
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          setTimerText(tabId, timerId, 'Franz AI still working.');
+        }
+      });
+    }, 10);
+
+    resolve({ timerId, timerInterval });
+  });
+
+  function createAndDisplayTimer(tabId) {
+    return new Promise((resolve) => {
+      chrome.tabs.executeScript(tabId, {
+        code: `
+          (function() {
+            const timer = document.createElement('div');
+            timer.id = 'franz-ai-timer';
+            timer.style.position = 'fixed';
+            timer.style.zIndex = '2147483647';
+            timer.style.top = '10px';
+            timer.style.left = '50%'; // Center horizontally
+            timer.style.transform = 'translateX(-50%)'; // Adjust for element width
+            timer.style.fontSize = '24px'; // Increased font size
+            timer.style.fontFamily = 'monospace'; // Changed font to monospace
+            timer.style.color = 'black'; // Changed font color to black
+            timer.style.backgroundColor = 'white'; // Changed background color to white
+            timer.style.padding = '10px'; // Added padding
+            timer.style.borderRadius = '4px'; // Added border radius
+            timer.style.border = '2px solid black'; // Added black border
+            timer.style.boxShadow = '0px 3px 6px rgba(0, 0, 0, 0.1)'; // Added shadow
+            timer.style.fontWeight = 'bold'; // Added bold font weight
+            timer.textContent = 'Franz AI working: 60000'; // Removed decimal places
+            document.body.appendChild(timer);
+            return timer.id;
+          })();
+        `,
+      }, (result) => resolve(result && result[0]));
+    });
+  }
+  
+  
+  
+
+  function updateTimer(tabId, timerId, startTime, onTimeLeftUpdate) {
+    const timeLeft = Math.max(0, 60 * 1000 - (Date.now() - startTime));
+    setTimerText(tabId, timerId, `Franz AI working: ${Math.floor(timeLeft)}`); // Removed decimal places
+    if (onTimeLeftUpdate) onTimeLeftUpdate(timeLeft);
+  }
+  
+
+  function setTimerText(tabId, timerId, text) {
+    chrome.tabs.executeScript(tabId, {
+      code: `
+        (function() {
+          const timer = document.getElementById('${timerId}');
+          if (timer) {
+            timer.textContent = '${text}';
+          }
+        })();
+      `,
+    });
+  }
+}
+
+function removeTimer(tabId, timerId, timerInterval) {
+  clearInterval(timerInterval);
+  chrome.tabs.executeScript(tabId, {
+    code: `
+      (function() {
+        const timer = document.getElementById('${timerId}');
+        if (timer) {
+          timer.remove();
+        }
+      })();
+    `,
+  });
+}
 
 function replaceSelectedText(tabId, originalText, rewrittenText, parentNode, uniqueId) {
   chrome.tabs.executeScript(tabId, {
