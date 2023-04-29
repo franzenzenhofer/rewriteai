@@ -4,6 +4,17 @@ const temperatureInput = document.getElementById('temperature');
 const temperatureValue = document.getElementById('temperature-value');
 const modelInput = document.getElementById('model');
 const saveButton = document.getElementById('save');
+const apiCount = document.getElementById('api-count'); // Get the API count element
+
+chrome.storage.local.get('requestCount', function(result) {
+  const count = 100 - result.requestCount;
+  apiCount.innerText = `Free rewrites: ${count} of 100`; // Set the text of the API count element
+
+  if (count < 10) { // If less than 10 rewrites are left
+    apiCount.style.fontWeight = "bold"; // Make the text bold
+    apiCount.style.color = "red"; // Make the text red
+  }
+});
 
 // Function to fetch available models
 async function fetchAvailableModels(apiKey) {

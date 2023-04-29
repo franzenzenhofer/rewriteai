@@ -96,39 +96,12 @@ if (!success) {
   
 
 
-// Method 4: If all methods above failed, try replacing using a new span element with unique ID
-if (!success) {
-  console.log('Trying to replace text using span method');
-  const selection = window.getSelection();
-
-  if (selection && selection.rangeCount > 0) {
-    const range = selection.getRangeAt(0);
-    const newNode = document.createElement('span');
-    newNode.setAttribute('id', 'franz_ai_span_'+uniqueId);
-    range.surroundContents(newNode);
-
-    const spanInLiveDOM = document.getElementById('franz_ai_span_'+uniqueId);
-
-    if (spanInLiveDOM && spanInLiveDOM.innerHTML.includes(originalText)) {
-      spanInLiveDOM.innerHTML = spanInLiveDOM.innerHTML.replace(originalText, '');
-      spanInLiveDOM.innerHTML = rewrittenText;
-      success = spanInLiveDOM.innerHTML.includes(rewrittenText);
-    }
-
-    if (success) {
-      console.log('Text replaced using span method');
-    } else {
-      console.log('Failed to replace text using span method');
-    }
-  } else {
-    console.log('No selection found for replacement');
-  }
-}
 
 
-/// Method 5: If all methods above failed, try replacing the selected text in the live DOM
-// Method 5: If all methods above failed, try replacing the selected text in the live DOM
-if (!success) {
+
+/// Method 4: If all methods above failed, try replacing the selected text in the live DOM
+// Method 4: If all methods above failed, try replacing the selected text in the live DOM
+/*if (!success) {
   console.log('Trying to replace text using window.getSelection()');
   const selection = window.getSelection();
   if (selection && selection.rangeCount > 0) {
@@ -196,7 +169,7 @@ if (insertedElement) {
   } else {
     console.log('No selection found for replacement');
   }
-}
+} */
 
 
 
@@ -214,9 +187,9 @@ if (insertedElement) {
     const liveDomElement = document.querySelector('.' + uniqueId);
 
     if (liveDomElement) {
-      liveDomElement.style.border = '5px solid blue';
-      liveDomElement.classList.add('big-fat-blue-border');
-      console.log('marked liveDomElement');
+      //liveDomElement.style.border = '5px solid blue';
+      //liveDomElement.classList.add('big-fat-blue-border');
+      //console.log('marked liveDomElement');
       console.log('Parent node:', liveDomElement);
       console.log('Parent node styles:', window.getComputedStyle(liveDomElement));
 

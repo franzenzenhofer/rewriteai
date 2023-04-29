@@ -1,17 +1,49 @@
-chrome.runtime.onInstalled.addListener(function () {
-  console.log('Extension installed');
-  chrome.storage.sync.get(['apiKey'], function (result) {
-    if (!result.apiKey) {
-      chrome.runtime.openOptionsPage();
-    }
-  });
+// Get the saved counter from Chrome storage API
+chrome.storage.local.get(['requestCount'], function (result) {
+  if (!result.requestCount) {
+    // If the counter is not set yet, set it to 0
+    chrome.storage.local.set({ requestCount: 0 });
+  }
+});
+
+async function canRequest() {
+  const { apiKey, requestCount } = await new Promise((resolve) =>
+    chrome.storage.local.get(['apiKey', 'requestCount'], resolve)
+  );
+
+  if (apiKey) {
+    return true; // Own API key is set, allow request
+  }
+
+  const newCount = requestCount + 1;
+  if (newCount > 100) {
+    console.error('You have exceeded the request limit of 100');
+    chrome.runtime.openOptionsPage(); // Open the options page
+    return false;
+  } else {
+    // Save the new count to Chrome storage API
+    chrome.storage.local.set({ requestCount: newCount });
+    return true;
+  }
+}
+
+
+
+chrome.runtime.onInstalled.addListener(async function (details) {
   chrome.contextMenus.create({
     id: 'rewriteText',
     title: 'Rewrite Text with Franz AI',
     contexts: ['selection'],
   });
   console.log('Context menu item created');
+  
+  if (details.reason === 'install') {
+    console.log('Extension installed');
+    chrome.runtime.openOptionsPage();
+  }
 });
+
+
 
 chrome.contextMenus.onClicked.addListener(function (info, tab) {
   console.log('Context menu item clicked');
@@ -103,6 +135,15 @@ async function rewriteText(text, parentNode, tabId, uniqueId) {
     return;
   }
 
+  const canExecute = await canRequest();
+  if (!canExecute) {
+  //  if(true){
+    console.error('You have exceeded the request limit of 100');
+    chrome.runtime.openOptionsPage(); // Open the options page
+    return;
+  }
+
+
   const rewrittenText = await fetchRewrittenText(text, tabId);
   if (rewrittenText) {
     replaceSelectedText(tabId, text, rewrittenText, parentNode, uniqueId);
@@ -115,35 +156,56 @@ async function fetchRewrittenText(text, tabId) {
 
   const apiKey = await getOption('apiKey');
   const model = (await getOption('model')) || 'gpt-3.5-turbo'; // Use gpt-3.5-turbo as default if model is not available
-  const promptTemplate = await getOption('promptTemplate'); // Change this line
+  const promptTemplate = await getOption('promptTemplate');
   const temperature = await getOption('temperature');
 
-  const finalPrompt = `${promptTemplate} "${text}"`; // Added this line
+  const finalPrompt = `${promptTemplate} "${text}"`; 
   console.log('Final prompt submitted to OpenAI:', finalPrompt); 
+
+  let response; // define response variable outside blocks
 
   try {
     console.log('Sending API request');
     await createTimer(tabId);
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [{
-          role: 'user',
-          content: finalPrompt,
-        }],
-        temperature: parseFloat(temperature),
-      }),
-    });
+
+    if(apiKey)
+    {
+      response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [{
+            role: 'user',
+            content: finalPrompt,
+          }],
+          temperature: parseFloat(temperature),
+        }),
+      });
+    } else {
+      console.log("no api key is set");
+      response = await fetch('https://sweet-cloud-2d13.franz-enzenhofer7308.workers.dev/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [{
+            role: 'user',
+            content: finalPrompt,
+          }],
+          temperature: parseFloat(temperature),
+        }),
+      });
+    }
 
     console.log('API response:', response);
     removeTimer(tabId);
 
-    //final to do do fix this
     if (!response.ok) {
       const errorMessage = handleApiError(response.status);
       console.error(errorMessage);
@@ -159,10 +221,11 @@ async function fetchRewrittenText(text, tabId) {
     return rewrittenText;
   } catch (error) {
     console.error('Error:', error);
-    removeTimer(tabI);
+    removeTimer(tabId);
     return null;
   }
 }
+
 
 async function getOption(key) {
   return new Promise((resolve) => {

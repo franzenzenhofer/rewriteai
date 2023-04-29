@@ -106,6 +106,16 @@
       a:hover, .reset-link:hover {
         text-decoration: underline;
       }
+
+      label span {
+  margin-left: auto;
+}
+
+#api-count {
+  margin-left: 0.0rem;
+  float: right;
+}
+
     </style>
   </head>
   <body>
@@ -118,7 +128,7 @@
       <h1>Franz AI Rewriter Options</h1>
     </div>
     <label>
-      API Key:
+      API Key: <span id="api-count"></span>:
       <input type="password" id="apiKey" /><br>
       If you don't have an API key, please sign up at
       <a href="https://platform.openai.com/account/api-keys" target="_blank">OpenAI API key page</a>.
