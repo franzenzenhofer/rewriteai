@@ -47,24 +47,59 @@ function getSelectedHTML(tabId) {
       return { selectedHTML: container.innerHTML, parentNodeOuterHTML: parentNode.outerHTML, uniqueId };
     }
   }).then((results) => {
-    if (results && results[0]) {
-      const result = results[0].result;
-      console.log('Selected HTML:', result.selectedHTML);
-      console.log('Parent node outerHTML:', result.parentNodeOuterHTML);
-      console.log('Unique identifier:', result.uniqueId);
-      rewriteText(result.selectedHTML, result.parentNodeOuterHTML, tabId, result.uniqueId);
-    } else {
-      console.log('No valid HTML selected');
+    try {
+      if (results && results[0]) {
+        const result = results[0].result;
+        console.log('Selected HTML:', result.selectedHTML);
+        console.log('Parent node outerHTML:', result.parentNodeOuterHTML);
+        console.log('Unique identifier:', result.uniqueId);
+        rewriteText(result.selectedHTML, result.parentNodeOuterHTML, tabId, result.uniqueId);
+      } else {
+        console.log('No valid HTML selected');
+        triggerOverlay(tabId, 'No valid HTML selected');
+      }
+    } catch (error) {
+      console.error('Error in getSelectedHTML:', error);
+      const message = 'Selected HTML could not be processed due to unknown reasons';
+      const escapedHTML = escapeHTML(result.selectedHTML);
+      triggerOverlay(tabId, `${message}: ${escapedHTML}`);
     }
+  }).catch((error) => {
+    console.error('Error in getSelectedHTML:', error);
+    const message = 'Selected HTML could not be processed due to unknown reasons';
+    triggerOverlay(tabId, message);
   });
 }
 
 
 
 
+
+
+
+
+
+
+function showInvalidInputError(tabId, text) {
+  const message = `An error occurred: The input text could not be used for a rewrite due to unknown reasons. Text: ${escapeHtml(text)}`;
+  triggerOverlay(tabId, message);
+}
+
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  };
+  return text.replace(/[&<>"']/g, (m) => map[m]);
+}
+
 async function rewriteText(text, parentNode, tabId, uniqueId) {
   if (!text) {
     console.error('Invalid input text:', text);
+    showInvalidInputError(tabId, text);
     return;
   }
 
