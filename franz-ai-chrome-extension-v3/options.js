@@ -73,9 +73,34 @@ function saveOptions() {
     temperature: temperatureInput.value,
     model: modelInput.value,
   }, function () {
-    alert('Options saved');
+    // Remove focus from the popup
+    window.blur();
+    // Create a mini message overlay
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = 0;
+    overlay.style.left = 0;
+    overlay.style.right = 0;
+    overlay.style.bottom = 0;
+    overlay.style.background = 'rgba(0,0,0,0.5)';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.color = '#fff';
+    overlay.style.fontFamily = 'sans-serif';
+    overlay.style.fontSize = '2rem';
+    overlay.style.zIndex = 9999;
+    overlay.textContent = 'Changes saved.';
+    document.body.appendChild(overlay);
+    // Remove the overlay after 1 seconds
+    setTimeout(() => {
+      document.body.removeChild(overlay);
+      // Close the popup
+      window.close();
+    }, 1000);
   });
 }
+
 
 document.addEventListener('DOMContentLoaded', loadOptions);
 
@@ -103,7 +128,7 @@ function resetOptions() {
       model: defaultModel,
     },
     function () {
-      alert('Options reset to defaults');
+      //alert('Options reset to defaults');
       loadOptions(); // Reload the options after resetting
     }
   );

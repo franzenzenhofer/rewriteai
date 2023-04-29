@@ -112,7 +112,7 @@ async function fetchRewrittenText(text, tabId) {
     if (!response.ok) {
       const errorMessage = handleApiError(response.status);
       console.error(errorMessage);
-      displayOverlayMessage(tabId, errorMessage);
+      triggerOverlay(tabId, errorMessage);
       return null;
     }
 
@@ -140,17 +140,17 @@ async function getOption(key) {
 function handleApiError(statusCode) {
   switch (statusCode) {
     case 400:
-      return 'Error: Bad request. Please check your input and try again.';
+      return 'Error 400: Bad request. Please check your input and try again.';
     case 401:
-      return 'Authentication error: Please check your API key and organization.';
+      return 'Authentication error 401: Please check your API key and organization.';
     case 404:
-      return 'Error: The requested resource was not found.';
+      return 'Error 404: The requested resource was not found.';
     case 429:
-      return 'Error: Rate limit reached or quota exceeded. Please check your plan and billing details, or try again later.';
+      return 'Error 429: Rate limit reached or quota exceeded. Please check your plan and billing details, or try again later.';
     case 500:
-      return 'Error: Server error while processing your request. Please try again later.';
+      return 'Error 500: Server error while processing your request. Please try again later.';
     default:
-      return 'Error: An unknown error occurred. Please try again later.';
+      return 'Error : An unknown error occurred. Please try again later.';
   }
 }
 
@@ -167,6 +167,17 @@ async function createTimer(tabId) {
   } catch (error) {
     console.error("Error creating and displaying timer:", error);
   }
+}
+
+async function triggerOverlay(tabId, message) {
+    const result = await chrome.scripting.executeScript({
+      target: { tabId },
+      args: [message],
+      func : (message) => { 
+        displayOverlayMessage(message);
+      }
+    })
+    .then(() => console.log("triggered overlay"));
 }
 
 async function injectOverlay(tabId) {

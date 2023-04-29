@@ -5,6 +5,7 @@ function displayOverlayMessage(message) {
       element.classList.remove('franz-ai-pulsate');
     });
   }
+  window.getSelection().removeAllRanges();
 
   const overlay = document.createElement('div');
   overlay.style.position = 'fixed';
