@@ -7,7 +7,12 @@ const saveButton = document.getElementById('save');
 const apiCount = document.getElementById('api-count'); // Get the API count element
 
 chrome.storage.local.get('requestCount', function(result) {
-  const count = 100 - result.requestCount;
+  let count = result.requestCount;
+  if (isNaN(count)) {
+    count = 100;
+  } else {
+    count = 100 - count;
+  }
   apiCount.innerText = `Free rewrites: ${count} of 100`; // Set the text of the API count element
 
   if (count < 10) { // If less than 10 rewrites are left
@@ -64,7 +69,7 @@ function updateModelSelectBox(availableModels, selectedModel) {
 async function loadOptions() {
   chrome.storage.sync.get(['apiKey', 'promptTemplate', 'temperature', 'model'], async function (data) {
     apiKeyInput.value = data.apiKey || '';
-    promptTemplateInput.value = data.promptTemplate || 'Rewrite the following text, making it better as if a professional website editor did it. Preserve any HTML structure if present. If there are links in there, keep the links. You can add bullet points if it fits the topic. Respond in the same language as the original text, and return approximately the same amount of text received. If you got a short headline or sentence, don\'t turn it into a paragraph:';
+    promptTemplateInput.value = data.promptTemplate || 'Rewrite this to a much better, more informative, cooler version. Keep the HTML as is during the rewrite, even if the HTML is broken. Use lots of emojis: ';
     temperatureInput.value = data.temperature || 0.7;
     temperatureValue.textContent = temperatureInput.value;
 
@@ -128,9 +133,10 @@ const resetButton = document.getElementById('reset');
 // Add a function to reset the options
 function resetOptions() {
   const defaultPromptTemplate =
-    'Rewrite the following text, making it better as if a professional website editor did it. Preserve any HTML structure if present. If there are links in there, keep the links. You can add bullet points if it fits the topic. Respond in the same language as the original text, and return approximately the same amount of text received. If you got a short headline or sentence, don\'t turn it into a paragraph:';
-  const defaultTemperature = 0.7;
+  'Rewrite this to a much better, more informative, cooler version. Keep the HTML as is during the rewrite, even if the HTML is broken. Use lots of emojis: ';
   const defaultModel = 'gpt-3.5-turbo';
+  const defaultTemperature = 0.7; // Define a default temperature value
+
 
   chrome.storage.sync.set(
     {

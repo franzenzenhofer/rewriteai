@@ -156,7 +156,7 @@ async function fetchRewrittenText(text, tabId) {
 
   const apiKey = await getOption('apiKey');
   const model = (await getOption('model')) || 'gpt-3.5-turbo'; // Use gpt-3.5-turbo as default if model is not available
-  const promptTemplate = await getOption('promptTemplate');
+  const promptTemplate = await getOption('promptTemplate') || "Rewrite this to a much better, more informative, cooler version. Keep the HTML as is during the rewrite, even if the HTML is broken. Use lots of emojis:";
   const temperature = await getOption('temperature');
 
   const finalPrompt = `${promptTemplate} "${text}"`; 
