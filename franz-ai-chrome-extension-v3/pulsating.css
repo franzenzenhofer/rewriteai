@@ -1,0 +1,19 @@
+@keyframes franzAiPulsateAnimation {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.franz-ai-pulsate {
+  animation: franzAiPulsateAnimation 1s ease infinite;
+}
+
+.big-fat-blue-border {
+  border: 5px solid blue !important;
+}
+
