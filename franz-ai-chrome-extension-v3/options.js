@@ -67,20 +67,22 @@ function updateModelSelectBox(availableModels, selectedModel) {
 }
 
 async function loadOptions() {
+  const defaultOptions = await getDefaultOptions();
   chrome.storage.sync.get(['apiKey', 'promptTemplate', 'temperature', 'model'], async function (data) {
     apiKeyInput.value = data.apiKey || '';
-    promptTemplateInput.value = data.promptTemplate || 'Rewrite this to a much better, more informative, cooler version. Keep the HTML as is during the rewrite, even if the HTML is broken. Use lots of emojis: ';
-    temperatureInput.value = data.temperature || 0.7;
+    promptTemplateInput.value = data.promptTemplate || defaultOptions.promptTemplate;
+    temperatureInput.value = data.temperature || defaultOptions.temperature;
     temperatureValue.textContent = temperatureInput.value;
 
     if (apiKeyInput.value) {
       const availableModels = await fetchAvailableModels(apiKeyInput.value);
-      updateModelSelectBox(availableModels, data.model);
+      updateModelSelectBox(availableModels, data.model || defaultOptions.model);
     } else {
-      updateModelSelectBox([], data.model);
+      updateModelSelectBox([], data.model || defaultOptions.model);
     }
   });
 }
+
 
 function saveOptions() {
   chrome.storage.sync.set({
@@ -130,19 +132,14 @@ saveButton.addEventListener('click', saveOptions);
 // Add a reference to the reset button
 const resetButton = document.getElementById('reset');
 
-// Add a function to reset the options
-function resetOptions() {
-  const defaultPromptTemplate =
-  'Rewrite this to a much better, more informative, cooler version. Keep the HTML as is during the rewrite, even if the HTML is broken. Use lots of emojis: ';
-  const defaultModel = 'gpt-3.5-turbo';
-  const defaultTemperature = 0.7; // Define a default temperature value
-
+async function resetOptions() {
+  const { promptTemplate, temperature, model } = await getDefaultOptions();
 
   chrome.storage.sync.set(
     {
-      promptTemplate: defaultPromptTemplate,
-      temperature: defaultTemperature,
-      model: defaultModel,
+      promptTemplate,
+      temperature,
+      model,
     },
     function () {
       //alert('Options reset to defaults');
@@ -150,6 +147,20 @@ function resetOptions() {
     }
   );
 }
+
+async function getDefaultOptions() {
+  return new Promise((resolve, reject) => {
+    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.sync) {
+      chrome.storage.sync.get("DEFAULT_OPTIONS", function (items) {
+        resolve(items.DEFAULT_OPTIONS);
+      });
+    } else {
+      reject(new Error("Chrome storage API is not available"));
+    }
+  });
+}
+
+
 
 // Add an event listener for the reset button
 resetButton.addEventListener('click', resetOptions);

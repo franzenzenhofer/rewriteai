@@ -1,3 +1,9 @@
+const DEFAULT_OPTIONS = {
+  model: 'gpt-3.5-turbo',
+  promptTemplate: 'Rewrite this to a much better, more informative, creative, better structured version. Use lots of emojis. Keep the HTML as is during the rewrite, even if the HTML is broken. Do not explain yourself. Return always in the same language as the text that follows now: ',
+  temperature: 0.7,
+};
+
 // Get the saved counter from Chrome storage API
 chrome.storage.local.get(['requestCount'], function (result) {
   if (!result.requestCount) {
@@ -28,7 +34,6 @@ async function canRequest() {
 }
 
 
-
 chrome.runtime.onInstalled.addListener(async function (details) {
   chrome.contextMenus.create({
     id: 'rewriteText',
@@ -36,6 +41,11 @@ chrome.runtime.onInstalled.addListener(async function (details) {
     contexts: ['selection'],
   });
   console.log('Context menu item created');
+
+  chrome.storage.sync.set({'DEFAULT_OPTIONS': DEFAULT_OPTIONS}, function() {
+    console.log('Default options saved.');
+  });
+  
   
   if (details.reason === 'install') {
     console.log('Extension installed');
@@ -155,9 +165,9 @@ async function fetchRewrittenText(text, tabId) {
   console.log('rewriteText function called with text:', text);
 
   const apiKey = await getOption('apiKey');
-  const model = (await getOption('model')) || 'gpt-3.5-turbo'; // Use gpt-3.5-turbo as default if model is not available
-  const promptTemplate = await getOption('promptTemplate') || "Rewrite this to a much better, more informative, cooler version. Keep the HTML as is during the rewrite, even if the HTML is broken. Use lots of emojis:";
-  const temperature = await getOption('temperature');
+  const model = (await getOption('model')) || DEFAULT_OPTIONS.model; // Use gpt-3.5-turbo as default if model is not available
+  const promptTemplate = await getOption('promptTemplate') || DEFAULT_OPTIONS.promptTemplate;
+  const temperature = await getOption('temperature')  ||  DEFAULT_OPTIONS.temperature;
 
   const finalPrompt = `${promptTemplate} "${text}"`; 
   console.log('Final prompt submitted to OpenAI:', finalPrompt); 
