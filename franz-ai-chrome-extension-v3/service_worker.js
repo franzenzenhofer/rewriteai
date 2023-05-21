@@ -2,6 +2,7 @@ const DEFAULT_OPTIONS = {
   model: 'gpt-3.5-turbo',
   promptTemplate: 'Rewrite this to a much better, more informative, creative, better structured version. Use lots of emojis. Keep the HTML as is during the rewrite, even if the HTML is broken. Do not explain yourself. Return always in the same language as the text that follows now: ',
   temperature: 0.7,
+  nr_of_frees: 10000
 };
 
 // Get the saved counter from Chrome storage API
@@ -22,8 +23,8 @@ async function canRequest() {
   }
 
   const newCount = requestCount + 1;
-  if (newCount > 100) {
-    console.error('You have exceeded the request limit of 100');
+  if (newCount > DEFAULT_OPTIONS.nr_of_frees) {
+    console.error('You have exceeded the request limit of 10000');
     chrome.runtime.openOptionsPage(); // Open the options page
     return false;
   } else {

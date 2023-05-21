@@ -7,13 +7,14 @@ const saveButton = document.getElementById('save');
 const apiCount = document.getElementById('api-count'); // Get the API count element
 
 chrome.storage.local.get('requestCount', function(result) {
+  let howmanyfree = 10000;
   let count = result.requestCount;
   if (isNaN(count)) {
-    count = 100;
+    count = howmanyfree;
   } else {
-    count = 100 - count;
+    count = howmanyfree - count;
   }
-  apiCount.innerText = `Free rewrites: ${count} of 100`; // Set the text of the API count element
+  apiCount.innerText = `Free rewrites: ${count} of ${howmanyfree}`; // Set the text of the API count element
 
   if (count < 10) { // If less than 10 rewrites are left
     apiCount.style.fontWeight = "bold"; // Make the text bold

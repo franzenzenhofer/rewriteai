@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Franz AI Text Rewriter",
-  "version": "1.0.0",
+  "version": "1.0.6",
   "description": "A Chrome extension to rewrite text using OpenAI API.",
   "action": {
     "default_popup": "options.html",
@@ -20,8 +20,7 @@
   "permissions": [
     "storage",
     "scripting",
-    "contextMenus",
-    "tabs"
+    "contextMenus"
   ],
   "host_permissions": [
     "https://api.openai.com/",
